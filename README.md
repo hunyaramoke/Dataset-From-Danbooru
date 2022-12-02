@@ -8,7 +8,7 @@ Danbooruへの負荷を避ける為、ダウンロード数は極力抑えてく
 ### Preparation
 実行には予めChromeのインストール及びChromedriverのダウンロードが必要となります。  
 自身のChromeのバージョンに合わせたdriverを[こちら](https://chromedriver.chromium.org/downloads)からダウンロードし、  
-extensionインストール後`extensions/Dataset_From_Danbooru/driver/`へ配置して下さい。
+extensionインストール後、`chromedriver.exe`を`extensions/Dataset_From_Danbooru/driver/`へ配置して下さい。
 ### Install
 WebUI`Extensions`タブの`Install form URL`から`URL for extension's git repository`にこのリポジトリを入力しInstall
 ## Description
