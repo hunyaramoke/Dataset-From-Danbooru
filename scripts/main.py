@@ -21,7 +21,7 @@ def on_ui_tabs():
         with gr.Row(equal_height=True):
             with gr.Column(variant='panel'):
                 with gr.Column(variant='panel'):
-                    download_dir = gr.Textbox(label="Download directory", **shared.hide_dirs, placeholder="Download directory", value="downloads")
+                    download_dir = gr.Textbox(label="", **shared.hide_dirs, placeholder="Download directory", value="downloads")
                     max_downloads = gr.Textbox(label="Max donwloads", **shared.hide_dirs, placeholder="Number of downloads", value="200", interactive=True)
                 with gr.Column(variant='panel'):
                     find_tags0 = gr.Textbox(label="Tag1", placeholder="Search tag1")
