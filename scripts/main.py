@@ -21,15 +21,21 @@ def on_ui_tabs():
         with gr.Row(equal_height=True):
             with gr.Column(variant='panel'):
                 with gr.Column(variant='panel'):
-                    download_dir = gr.Textbox(label="", **shared.hide_dirs, placeholder="Download directory", value="downloads")
+                    download_dir = gr.Textbox(label="Download irectory", **shared.hide_dirs, placeholder="Download directory", value="")
                     max_downloads = gr.Textbox(label="Max donwloads", **shared.hide_dirs, placeholder="Number of downloads", value="200", interactive=True)
                 with gr.Column(variant='panel'):
                     find_tags0 = gr.Textbox(label="Tag1", placeholder="Search tag1")
                     find_tags1 = gr.Textbox(label="Tag2", placeholder="Search tag2")
                 with gr.Column(variant='panel'):
+                    extra_tag_option = gr.Radio(choices=["AND", "OR"], value="AND", label="Search option")
                     find_extra_tags0 = gr.Textbox(label="Extra tag1", placeholder="(Optional) Search extra tag1")
                     find_extra_tags1 = gr.Textbox(label="Exara tag2", placeholder="(Optional) Search extra tag2")
                     find_extra_tags2 = gr.Textbox(label="Exara tag3", placeholder="(Optional) Search extra tag3")
+                with gr.Column(variant='panel'):
+                    not_tag_option = gr.Radio(choices=["AND", "OR"], value="AND", label="Not search option")
+                    not_find_tag0 = gr.Textbox(label="Not search tag1", placeholder="(Optional) Search extra tag1")
+                    not_find_tag1 = gr.Textbox(label="Not search tag2", placeholder="(Optional) Search extra tag2")
+                    not_find_tag2 = gr.Textbox(label="Not search tag3", placeholder="(Optional) Search extra tag3")
                 with gr.Column(variant='panel'):
                     score_filter = gr.Textbox(label="Score filter", **shared.hide_dirs, placeholder="(Optional) Score filter")
             with gr.Column(variant='panel'):
@@ -40,7 +46,8 @@ def on_ui_tabs():
         
         dir_run.click(
             fn=main,
-            inputs=[download_dir, max_downloads, find_tags0, find_tags1, find_extra_tags0, find_extra_tags1, find_extra_tags2, score_filter],
+            inputs=[download_dir, max_downloads, find_tags0, find_tags1, find_extra_tags0, find_extra_tags1, find_extra_tags2, extra_tag_option,
+                    not_find_tag0, not_find_tag1, not_find_tag2, not_tag_option, score_filter],
             outputs=[status]
         )
 
@@ -65,8 +72,9 @@ def download_img(url, dst_path):
             f.write(data)
 
 def main(download_dir, max_downloads, find_tags0, find_tags1,
-         find_extra_tags0, find_extra_tags1, find_extra_tags2,
-         score_filter=0):
+         find_extra_tags0, find_extra_tags1, find_extra_tags2, extra_tag_option,
+         not_find_tag0, not_find_tag1, not_find_tag2, not_tag_option,
+         score_filter):
     
     extra_tags = 1
     
@@ -136,16 +144,36 @@ def main(download_dir, max_downloads, find_tags0, find_tags1,
             if int(score) < int(score_filter):
                 continue
            
-           
+            match = 0
+            if (not_tag_option == "AND"):
+                if ((not not_find_tag0 or (not_find_tag0 in tags)) and
+                   (not not_find_tag1 or (not_find_tag1 in tags)) and
+                   (not not_find_tag2 or (not_find_tag2 in tags))):
+                    match = 1
+            elif (not_tag_option == "OR"):
+                if not_find_tag0 and not_find_tag0 in tags:
+                    match = 1
+                if not_find_tag1 and not_find_tag1 in tags:
+                    match = 1
+                if not_find_tag2 and not_find_tag2 in tags:
+                    match = 1
+            if match == 1:
+                continue
             
             match = 0
             if extra_tags == 1:
-                if find_extra_tags0 and find_extra_tags0 in tags:
-                    match = 1
-                if find_extra_tags1 and find_extra_tags1 in tags:
-                    match = 1
-                if find_extra_tags2 and find_extra_tags2 in tags:
-                    match = 1
+                if (extra_tag_option == "AND"):
+                    if ((not find_extra_tags0 or (find_extra_tags0 in tags)) and
+                       (not find_extra_tags1 or (find_extra_tags1 in tags)) and
+                       (not find_extra_tags2 or (find_extra_tags2 in tags))):
+                        match = 1
+                elif (extra_tag_option == "OR"):
+                    if find_extra_tags0 and find_extra_tags0 in tags:
+                        match = 1
+                    if find_extra_tags1 and find_extra_tags1 in tags:
+                        match = 1
+                    if find_extra_tags2 and find_extra_tags2 in tags:
+                        match = 1
             
             
             #print("extra_tags:" + str(extra_tags))
