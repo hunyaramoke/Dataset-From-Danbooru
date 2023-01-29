@@ -5,6 +5,7 @@ import modules.shared as shared
 
 from selenium import webdriver
 import time
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import requests
 import os
@@ -21,7 +22,7 @@ def on_ui_tabs():
         with gr.Row(equal_height=True):
             with gr.Column(variant='panel'):
                 with gr.Column(variant='panel'):
-                    download_dir = gr.Textbox(label="Download irectory", **shared.hide_dirs, placeholder="Download directory", value="")
+                    download_dir = gr.Textbox(label="Download irectory", **shared.hide_dirs, placeholder="Download directory", value="downloads")
                     max_downloads = gr.Textbox(label="Max donwloads", **shared.hide_dirs, placeholder="Number of downloads", value="200", interactive=True)
                 with gr.Column(variant='panel'):
                     find_tags0 = gr.Textbox(label="Tag1", placeholder="Search tag1")
@@ -90,7 +91,7 @@ def main(download_dir, max_downloads, find_tags0, find_tags1,
     #print(max_downloads)
     
     option = Options()                          # オプションを用意
-    option.add_argument('--headless')           # ヘッドレスモードの設定を付与
+    #option.add_argument('--headless')           # ヘッドレスモードの設定を付与
 
     #クロームの立ち上げ
     driver=webdriver.Chrome("extensions/Dataset_From_Danbooru/driver/chromedriver.exe", chrome_options=option)
@@ -104,38 +105,43 @@ def main(download_dir, max_downloads, find_tags0, find_tags1,
     
     # Webページを取得して解析する
     load_url = "https://danbooru.donmai.us/posts?page=1&tags="  + find_tags0 + "+" + find_tags1
-
-    html = requests.get(load_url)
-    soup = BeautifulSoup(html.content, "html.parser")
-
-
+    print(load_url)
+    
     # 最終ページNoを取得
-    pages = soup.find_all(class_="paginator-page desktop-only")
-    print(pages)
-    if not pages:
-        last_pageNo = 1
-    else:
-        last_pageNo =  pages[-1].text
+    driver.get(load_url)
+    time.sleep(3)
+    last_pages = driver.find_elements(By.CSS_SELECTOR, ".paginator-page.desktop-only")
+    last_pageNo = last_pages[-1].get_attribute("text")
 
-    print("pageNo:" + str(last_pageNo))
+    #html = requests.get(load_url)
+    time.sleep(3)
+    #soup = BeautifulSoup(html.content, "html.parser")
+    
+    #source = driver.page_source
+    #print(source)
 
     img_urls = []
     limited = 0
 
     for num in range(1, int(last_pageNo)+1):
         load_url = "https://danbooru.donmai.us/posts?page=" + str(num) + "&tags="  + find_tags0 + "+" + find_tags1
+        
         html = requests.get(load_url)
         soup = BeautifulSoup(html.content, "html.parser")
 
-        images = soup.find_all("img")
-
+        #images = soup.find_all("img")
+        
+        driver.get(load_url)
+        images =  driver.find_elements(By.TAG_NAME, 'img')
 
         for img in images:
-            src = img["src"]
+            #src = img["src"]
+            src = img.get_attribute("src")
             if 'cdn.donmai.us' not in src:
                 continue
 
-            tags = img["title"]
+            #tags = img["title"]
+            tags = img.get_attribute("title")
             if 'animated' in tags:
                 continue
                 
@@ -145,18 +151,19 @@ def main(download_dir, max_downloads, find_tags0, find_tags1,
                 continue
            
             match = 0
-            if (not_tag_option == "AND"):
-                if ((not not_find_tag0 or (not_find_tag0 in tags)) and
-                   (not not_find_tag1 or (not_find_tag1 in tags)) and
-                   (not not_find_tag2 or (not_find_tag2 in tags))):
-                    match = 1
-            elif (not_tag_option == "OR"):
-                if not_find_tag0 and not_find_tag0 in tags:
-                    match = 1
-                if not_find_tag1 and not_find_tag1 in tags:
-                    match = 1
-                if not_find_tag2 and not_find_tag2 in tags:
-                    match = 1
+            if (not_find_tag0 != ""):
+                if (not_tag_option == "AND"):
+                    if ((not not_find_tag0 or (not_find_tag0 in tags)) and
+                       (not not_find_tag1 or (not_find_tag1 in tags)) and
+                       (not not_find_tag2 or (not_find_tag2 in tags))):
+                        match = 1
+                elif (not_tag_option == "OR"):
+                    if not_find_tag0 and not_find_tag0 in tags:
+                        match = 1
+                    if not_find_tag1 and not_find_tag1 in tags:
+                        match = 1
+                    if not_find_tag2 and not_find_tag2 in tags:
+                        match = 1
             if match == 1:
                 continue
             
@@ -174,15 +181,14 @@ def main(download_dir, max_downloads, find_tags0, find_tags1,
                         match = 1
                     if find_extra_tags2 and find_extra_tags2 in tags:
                         match = 1
-            
-            
-            #print("extra_tags:" + str(extra_tags))
-            #print("match:" + str(match))
+
             if extra_tags == 1 and match == 0:
                 continue
 
             src_org = src.replace('180x180', 'original')
             src_org = src_org.replace('.jpg', '.png')
+            
+            #print("src_org:" + src_org)
 
             img_urls.append(src_org)
             
